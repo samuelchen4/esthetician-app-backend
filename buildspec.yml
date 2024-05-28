@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 283466803266.dkr.ecr.us-west-2.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t esthetician-app-backend .
+      - docker tag esthetician-app-backend:latest 283466803266.dkr.ecr.us-west-2.amazonaws.com/esthetician-app-backend:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push 283466803266.dkr.ecr.us-west-2.amazonaws.com/esthetician-app-backend:latest
+      - echo Updating ECS service...
+      - aws ecs update-service --cluster esthetician-app-backend-cluster --service esthetician-app-backend-service --force-new-deployment
+artifacts:
+  files:
+    - '**/*'
